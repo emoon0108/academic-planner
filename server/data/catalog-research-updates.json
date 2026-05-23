@@ -1,0 +1,404 @@
+{
+  "updatedAt": "2026-05-18T01:26:54.809Z",
+  "updates": [
+    {
+      "id": "stanford-computer-science-1779067599841",
+      "schoolName": "Stanford",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Automatic web search is not configured in this local app. Add BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY, or paste official source URLs with the target.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:26:39.841Z"
+    },
+    {
+      "id": "harvard-university-computer-science-1779067559206",
+      "schoolName": "Harvard University",
+      "majorName": "Computer Science",
+      "status": "sources_found",
+      "confidence": "medium",
+      "sources": [
+        {
+          "title": "Concentration Requirements :: Harvard CS Concentration",
+          "url": "https://csadvising.seas.harvard.edu/concentration/requirements/",
+          "excerpt": "Concentration Requirements :: Harvard CS Concentration Computer Science Undergraduate Advising Concentration Requirements CS Concentration Requirements DETAILED REQUIREMENTS Basic Requirements: 11–14 courses (44–56 credits) Honors Requirements: 13–16 courses (52–64 credits) Requirements for Joint Concentrations: 10–13 courses (40–52 credits) for CS Field Requirements for Mind, Brain, and Behavior Program: 13–16 courses (52–64 credits) More information Concentration Requirements This page describes the computer science concentration requirements. See the Degree Programs page or the Computer Science handbook entry for more information about the different tracks within the computer science concentration. The courses page provides more detailed information of which courses count for which requirements. See also sample schedules for guidance on specific courses to take in your first two years as well as example plans of study to complete all of your requirements. If you are ready to declare a CS concentration, please follow these steps . You can also see how to combine CS with other areas in the form of a secondary concentration , joint concentration , or other means. CS Concentration Requirements Computer Science’s concentration requirements are as follows. For the basic plan, 9 core computer science courses are required. Collectively, these courses must meet requirements in programming, formal reasoning, systems, computation and the world, and advanced computer science. A strict majority of them must be courses with Harvard CS course numbers; the others may be courses in Harvard CS or approved courses in other departments or universities. A single course may fulfill multiple requirements (for example, CS 1090a counts for both Programming 1 and Computation and the World). T"
+        }
+      ],
+      "extractedCourses": [
+        {
+          "code": "CS 1090A",
+          "name": "counts for both Programming 1 and Computation and the World",
+          "credits": null,
+          "sourceUrl": "https://csadvising.seas.harvard.edu/concentration/requirements/"
+        }
+      ],
+      "structuredRequirements": [],
+      "requirementHints": [
+        "credits) for CS Field Requirements for Mind, Brain, and Behavior Program: 13–16 courses (52–64 credits) More information Concentration Requirements This page describes the computer science concentration requirements.",
+        "Degree Programs page or the Computer Science handbook entry for more information about the different tracks within the computer science concentration.",
+        "Requirements Computer Science’s concentration requirements are as follows.",
+        "core computer science courses are required.",
+        "requirements in programming, formal reasoning, systems, computation and the world, and advanced computer science.",
+        "requirements (for example, CS 1090a counts for both Programming 1 and Computation and the World)."
+      ],
+      "notes": [
+        "Use retrieved sources for citations, but tell the student to verify final decisions with an advisor or registrar when stakes are high.",
+        "Structured AI extraction was unavailable, so this update used source retrieval and regex hints only: OPENAI_API_KEY is not configured. Add OPENAI_API_KEY to .env or configure BUILT_IN_FORGE_API_KEY.",
+        "Review this update before converting it into production degree requirements.",
+        "Approved import created or reused school, major, courses, and requirement records."
+      ],
+      "createdAt": "2026-05-18T01:25:59.206Z",
+      "importedAt": "2026-05-18T01:26:54.809Z",
+      "importedSchoolId": 1001,
+      "importedProgramId": 1002,
+      "importedCourseIds": [
+        1003
+      ]
+    },
+    {
+      "id": "harvard-university-computer-science-1779067524069",
+      "schoolName": "Harvard University",
+      "majorName": "Computer Science",
+      "status": "sources_found",
+      "confidence": "medium",
+      "sources": [
+        {
+          "title": "Concentration Requirements :: Harvard CS Concentration",
+          "url": "https://csadvising.seas.harvard.edu/concentration/requirements/",
+          "excerpt": "Concentration Requirements :: Harvard CS Concentration Computer Science Undergraduate Advising Concentration Requirements CS Concentration Requirements DETAILED REQUIREMENTS Basic Requirements: 11–14 courses (44–56 credits) Honors Requirements: 13–16 courses (52–64 credits) Requirements for Joint Concentrations: 10–13 courses (40–52 credits) for CS Field Requirements for Mind, Brain, and Behavior Program: 13–16 courses (52–64 credits) More information Concentration Requirements This page describes the computer science concentration requirements. See the Degree Programs page or the Computer Science handbook entry for more information about the different tracks within the computer science concentration. The courses page provides more detailed information of which courses count for which requirements. See also sample schedules for guidance on specific courses to take in your first two years as well as example plans of study to complete all of your requirements. If you are ready to declare a CS concentration, please follow these steps . You can also see how to combine CS with other areas in the form of a secondary concentration , joint concentration , or other means. CS Concentration Requirements Computer Science’s concentration requirements are as follows. For the basic plan, 9 core computer science courses are required. Collectively, these courses must meet requirements in programming, formal reasoning, systems, computation and the world, and advanced computer science. A strict majority of them must be courses with Harvard CS course numbers; the others may be courses in Harvard CS or approved courses in other departments or universities. A single course may fulfill multiple requirements (for example, CS 1090a counts for both Programming 1 and Computation and the World). T"
+        }
+      ],
+      "extractedCourses": [
+        {
+          "code": "CS 1090A",
+          "name": "counts for both Programming 1 and Computation and the World",
+          "credits": null,
+          "sourceUrl": "https://csadvising.seas.harvard.edu/concentration/requirements/"
+        }
+      ],
+      "structuredRequirements": [],
+      "requirementHints": [
+        "credits) for CS Field Requirements for Mind, Brain, and Behavior Program: 13–16 courses (52–64 credits) More information Concentration Requirements This page describes the computer science concentration requirements.",
+        "Degree Programs page or the Computer Science handbook entry for more information about the different tracks within the computer science concentration.",
+        "Requirements Computer Science’s concentration requirements are as follows.",
+        "core computer science courses are required.",
+        "requirements in programming, formal reasoning, systems, computation and the world, and advanced computer science.",
+        "requirements (for example, CS 1090a counts for both Programming 1 and Computation and the World)."
+      ],
+      "notes": [
+        "Use retrieved sources for citations, but tell the student to verify final decisions with an advisor or registrar when stakes are high.",
+        "Structured AI extraction was unavailable, so this update used source retrieval and regex hints only: LLM invoke failed: 429 Too Many Requests – {\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:25:24.069Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1779067433152",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:23:53.152Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1779067432021",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:23:52.021Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1779067424986",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:23:44.986Z"
+    },
+    {
+      "id": "michigan-state-university-computer-science-1779067424987",
+      "schoolName": "Michigan State University",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:23:44.987Z"
+    },
+    {
+      "id": "university-of-california-berkeley-computer-science-1779067424987",
+      "schoolName": "University of California Berkeley",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:23:44.987Z"
+    },
+    {
+      "id": "harvard-computer-science-1779067409868",
+      "schoolName": "Harvard",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:23:29.868Z"
+    },
+    {
+      "id": "harvard-computer-science-1779067348357",
+      "schoolName": "harvard",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:22:28.357Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1779067339750",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:22:19.750Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1779067338837",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:22:18.838Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1779067334307",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:22:14.307Z"
+    },
+    {
+      "id": "michigan-state-university-computer-science-1779067334307",
+      "schoolName": "Michigan State University",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:22:14.307Z"
+    },
+    {
+      "id": "university-of-california-berkeley-computer-science-1779067334307",
+      "schoolName": "University of California Berkeley",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "structuredRequirements": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-18T01:22:14.307Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1778915764910",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-16T07:16:04.910Z"
+    },
+    {
+      "id": "michigan-state-university-computer-science-1778915764914",
+      "schoolName": "Michigan State University",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-16T07:16:04.914Z"
+    },
+    {
+      "id": "university-of-california-berkeley-computer-science-1778915764914",
+      "schoolName": "University of California Berkeley",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-16T07:16:04.914Z"
+    },
+    {
+      "id": "university-of-michigan-computer-science-1778899904927",
+      "schoolName": "University of Michigan",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-16T02:51:44.927Z"
+    },
+    {
+      "id": "michigan-state-university-computer-science-1778899904927",
+      "schoolName": "Michigan State University",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-16T02:51:44.927Z"
+    },
+    {
+      "id": "university-of-california-berkeley-computer-science-1778899904927",
+      "schoolName": "University of California Berkeley",
+      "majorName": "Computer Science",
+      "status": "no_sources_found",
+      "confidence": "low",
+      "sources": [],
+      "extractedCourses": [],
+      "requirementHints": [],
+      "notes": [
+        "No official source URLs were pasted by the student.",
+        "No official pages could be retrieved automatically. Ask the student for a registrar, catalog, department, or course schedule URL.",
+        "Review this update before converting it into production degree requirements."
+      ],
+      "createdAt": "2026-05-16T02:51:44.927Z"
+    }
+  ]
+}
