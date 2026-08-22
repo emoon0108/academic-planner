@@ -19,7 +19,12 @@ export type FileContent = {
   type: "file_url";
   file_url: {
     url: string;
-    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4" ;
+    mime_type?:
+      | "audio/mpeg"
+      | "audio/wav"
+      | "application/pdf"
+      | "audio/mp4"
+      | "video/mp4";
   };
 };
 
@@ -218,10 +223,13 @@ type ProviderConfig = {
 
 const resolveProviderConfig = (): ProviderConfig => {
   if (ENV.forgeApiKey) {
+    if (!ENV.forgeApiUrl || ENV.forgeApiUrl.trim().length === 0) {
+      throw new Error(
+        "BUILT_IN_FORGE_API_URL is required when BUILT_IN_FORGE_API_KEY is configured."
+      );
+    }
     return {
-      apiUrl: ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-        ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-        : "https://forge.manus.im/v1/chat/completions",
+      apiUrl: `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`,
       apiKey: ENV.forgeApiKey,
       model: "gemini-2.5-flash",
       provider: "forge",
@@ -237,7 +245,9 @@ const resolveProviderConfig = (): ProviderConfig => {
     };
   }
 
-  throw new Error("OPENAI_API_KEY is not configured. Add OPENAI_API_KEY to .env or configure BUILT_IN_FORGE_API_KEY.");
+  throw new Error(
+    "OPENAI_API_KEY is not configured. Add OPENAI_API_KEY to .env or configure BUILT_IN_FORGE_API_KEY."
+  );
 };
 
 const normalizeResponseFormat = ({
@@ -319,7 +329,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   if (provider.provider === "forge") {
     payload.thinking = {
-      "budget_tokens": 128
+      budget_tokens: 128,
     };
   }
 

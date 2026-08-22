@@ -4,7 +4,7 @@ import { COOKIE_NAME } from "../shared/const";
 import type { TrpcContext } from "./_core/context";
 
 // ─── Mock the db module so tests run without a real database ─────────────────
-vi.mock("./db", async (importOriginal) => {
+vi.mock("./db", async importOriginal => {
   const actual = await importOriginal<typeof import("./db")>();
   return {
     ...actual,
@@ -17,15 +17,19 @@ import * as db from "./db";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
-function createAuthContext(): { ctx: TrpcContext; clearedCookies: { name: string; options: Record<string, unknown> }[] } {
-  const clearedCookies: { name: string; options: Record<string, unknown> }[] = [];
+function createAuthContext(): {
+  ctx: TrpcContext;
+  clearedCookies: { name: string; options: Record<string, unknown> }[];
+} {
+  const clearedCookies: { name: string; options: Record<string, unknown> }[] =
+    [];
 
   const user: AuthenticatedUser = {
     id: 42,
     openId: "test-user-42",
     email: "student@ivy.edu",
     name: "Test Student",
-    loginMethod: "manus",
+    loginMethod: "managed-oauth",
     role: "user",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -114,10 +118,14 @@ describe("auth.deleteAccount", () => {
   });
 
   it("propagates errors from deleteUserAccount", async () => {
-    vi.mocked(db.deleteUserAccount).mockRejectedValueOnce(new Error("DB delete error"));
+    vi.mocked(db.deleteUserAccount).mockRejectedValueOnce(
+      new Error("DB delete error")
+    );
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
-    await expect(caller.auth.deleteAccount()).rejects.toThrow("DB delete error");
+    await expect(caller.auth.deleteAccount()).rejects.toThrow(
+      "DB delete error"
+    );
   });
 });

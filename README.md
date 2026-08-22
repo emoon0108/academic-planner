@@ -2,7 +2,9 @@
 
 AcademiQ is a full-stack academic planning engine that turns degree requirements, prerequisites, transfer credit, workload preferences, and career goals into explainable semester-by-semester plans.
 
-The project is currently private while its university catalog data and authentication setup are being prepared for a public demo. This repository documents the implementation and provides a reproducible local verification path.
+![AcademiQ degree-planning interface](docs/academiq-overview.jpg)
+
+This public portfolio project includes an in-memory demo path, so the planning engine and interface can be explored locally without credentials or a hosted database. Database persistence, managed authentication, and external AI services are optional integrations.
 
 ## Engineering highlights
 
@@ -36,11 +38,15 @@ Requirements: Node.js 20.19+ and pnpm 10.
 
 ```bash
 pnpm install --frozen-lockfile
-cp .env.example .env
 pnpm dev
 ```
 
-Database-backed flows require the connection variables used by `server/db.ts`. AI advising is optional; without an OpenAI key, the tested fallback responses remain available.
+With no environment file, AcademiQ starts in a local demo mode backed by in-memory data and a non-production demo identity. To exercise optional integrations, copy `.env.example` to `.env` and configure only the services you need.
+
+- `DATABASE_URL` enables MySQL persistence instead of the in-memory repository.
+- The OAuth variables enable managed sign-in instead of the development identity.
+- `OPENAI_API_KEY` enables live AI advising; deterministic, tested fallback guidance remains available without it.
+- The Forge variables enable the original managed storage, media, map, and notification adapters.
 
 ## Verification
 
@@ -48,10 +54,20 @@ Database-backed flows require the connection variables used by `server/db.ts`. A
 pnpm verify
 ```
 
-This runs the TypeScript check, 40 unit/integration tests, the production client build, and the bundled server build. Tests cover graph ordering, plan generation, eight-term credit balancing, replanning, account deletion/reset, authentication, and academic-agent fallbacks.
+This runs the TypeScript check, 43 unit/integration tests, the production client build, and the bundled server build. Tests cover graph ordering, plan generation, eight-term credit balancing, replanning, account deletion/reset, session-secret enforcement, authentication, and academic-agent fallbacks.
 
 ## Current scope
 
 - Course-catalog freshness depends on reviewed seed/research imports.
 - General-education credits that are not mapped to a specific catalog course are labeled as placeholders instead of being presented as verified course recommendations.
 - Authentication and database credentials are environment-specific and are intentionally excluded from source control.
+
+## Data and security
+
+The bundled catalog records are prototype fixtures assembled from public academic information and are not authoritative advising data. Verify course availability, prerequisites, and degree rules with the relevant institution before making enrollment decisions. Do not use real student records in a public demo environment.
+
+Please report security concerns using the process in [SECURITY.md](SECURITY.md).
+
+## License
+
+Original source code is available under the [MIT License](LICENSE). University catalog content, font files, institutional names, and third-party material are excluded or separately licensed as described in [ASSET-LICENSE.md](ASSET-LICENSE.md).
