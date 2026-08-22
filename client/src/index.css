@@ -204,17 +204,6 @@
     }
   }
 
-  /* Glass card */
-  .glass {
-    background: oklch(0.14 0.012 260 / 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid oklch(0.25 0.015 260 / 0.6);
-  }
-
-  .gradient-text {
-    color: var(--accent);
-  }
-
   /* Semester colors */
   .semester-fall { border-left: 3px solid oklch(0.65 0.22 270); }
   .semester-spring { border-left: 3px solid oklch(0.70 0.18 150); }

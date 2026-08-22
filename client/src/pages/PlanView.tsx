@@ -18,6 +18,40 @@ import {
 // Sidebar reuse
 import Dashboard from "./Dashboard";
 
+const ADVISOR_PRINT_STYLES = `
+  :root{color:#18231d;background:#eee7d6}
+  *{box-sizing:border-box}
+  body{max-width:850px;margin:0 auto;padding:44px 52px;background:#faf6ea;font-family:"Avenir Next","Trebuchet MS",sans-serif;line-height:1.55}
+  header{border-top:10px solid #1d4b3a;border-bottom:2px solid #18231d;padding:20px 0 16px;margin-bottom:30px}
+  header span{font-size:11px;font-weight:700;letter-spacing:.18em;color:#795a00}
+  h1{margin:5px 0 0;font:700 38px/1 Georgia,serif;letter-spacing:-.035em}
+  .report{white-space:pre-wrap;font-size:14px}
+  @media print{body{padding:20px;background:white}header{break-after:avoid}}
+`;
+
+const PLAN_PRINT_STYLES = `
+  :root{color:#18231d;background:#eee7d6}
+  *{box-sizing:border-box}
+  body{max-width:900px;margin:0 auto;padding:42px 48px;background:#faf6ea;font-family:"Avenir Next","Trebuchet MS",sans-serif;line-height:1.45}
+  .folio{border-top:10px solid #1d4b3a;padding-top:14px;color:#795a00;font-size:11px;font-weight:700;letter-spacing:.18em}
+  h1,h2,h3{font-family:Georgia,serif;letter-spacing:-.025em}
+  h1{font-size:36px;margin:7px 0 4px}
+  h2{font-size:22px;border-bottom:2px solid #18231d;padding-bottom:6px}
+  .meta{color:#5e655d;font-size:13px;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:20px 0;border:2px solid #18231d}
+  .box{padding:13px;border-right:1px solid #18231d;background:#f1c84b}
+  .box:last-child{border-right:0}
+  .box .val{font:700 24px/1 Georgia,serif}
+  .box .lbl{margin-top:6px;font-size:10px;text-transform:uppercase;letter-spacing:.09em}
+  .section{margin-top:30px}
+  .semester{margin-bottom:20px;page-break-inside:avoid}
+  .semester h3{font-size:17px;border-bottom:1px solid #8d918a;padding-bottom:6px;margin-bottom:8px}
+  .course{display:grid;grid-template-columns:90px 1fr 70px 80px;gap:12px;padding:6px 0;font-size:13px;border-bottom:1px solid #cec8b9}
+  .issue{border-left:7px solid #b74a31;background:#f3e1cb;padding:9px 12px;margin:7px 0;font-size:13px}
+  .req{display:flex;justify-content:space-between;border-bottom:1px solid #cec8b9;padding:7px 0;font-size:13px}
+  @media print{body{padding:18px;background:white}.grid{break-inside:avoid}}
+`;
+
 function SemesterCard({
   semester,
   courses,
@@ -321,7 +355,7 @@ function AdvisorReportPanel({ planId }: { planId: number }) {
   };
 
   const printReport = () => {
-    const html = `<!DOCTYPE html><html><head><title>Advisor Report</title><style>body{font-family:Inter,Arial,sans-serif;max-width:850px;margin:36px auto;color:#111;white-space:pre-wrap;line-height:1.5}</style></head><body>${report.replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch] ?? ch))}</body></html>`;
+    const html = `<!DOCTYPE html><html><head><title>Advisor Report</title><style>${ADVISOR_PRINT_STYLES}</style></head><body><header><span>ACADEMIQ / ADVISOR BRIEF</span><h1>Plan validation</h1></header><main class="report">${report.replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch] ?? ch))}</main></body></html>`;
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const win = window.open(url, "_blank");
@@ -532,7 +566,7 @@ export default function PlanView() {
     onSuccess: (data) => {
       const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch] ?? ch));
       const issues = data.health?.issues ?? [];
-      const html = `<!DOCTYPE html><html><head><title>${esc(data.planName)}</title><style>body{font-family:Inter,Arial,sans-serif;max-width:900px;margin:36px auto;color:#151515;line-height:1.45}h1{font-size:28px;margin:0 0 4px}.meta{color:#555;font-size:13px;margin-bottom:22px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.box{border:1px solid #ddd;border-radius:8px;padding:12px}.box .val{font-size:22px;font-weight:700}.box .lbl{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.04em}.section{margin-top:26px}.semester{margin-bottom:18px;page-break-inside:avoid}.semester h3{font-size:16px;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:8px}.course{display:grid;grid-template-columns:90px 1fr 70px 80px;gap:12px;padding:5px 0;font-size:13px;border-bottom:1px solid #eee}.issue{border-left:4px solid #d97706;background:#fff7ed;padding:8px 10px;margin:6px 0;font-size:13px}.req{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:6px 0;font-size:13px}@media print{body{margin:18px}.grid{break-inside:avoid}}</style></head><body><h1>${esc(data.planName)}</h1><div class="meta">Graduation: ${esc(data.estimatedGraduation)} | ${data.totalCredits}/${data.targetCredits} credits | ${data.totalSemesters} semesters | Generated ${new Date(data.generatedAt).toLocaleDateString()}</div><div class="grid"><div class="box"><div class="val">${(data.scores as any).workload?.toFixed(1)}</div><div class="lbl">Workload</div></div><div class="box"><div class="val">${(data.scores as any).difficulty?.toFixed(1)}</div><div class="lbl">Difficulty</div></div><div class="box"><div class="val">${(data.scores as any).careerReadiness?.toFixed(1)}</div><div class="lbl">Career</div></div><div class="box"><div class="val">${(data.scores as any).overall?.toFixed(1)}</div><div class="lbl">Overall</div></div></div><div class="section"><h2>Plan Health</h2>${issues.length ? issues.map((i: any) => `<div class="issue"><strong>${esc(i.title)}</strong><br>${esc(i.detail)}</div>`).join("") : "<p>No issues detected.</p>"}</div><div class="section"><h2>Requirement Tracking</h2>${(data.requirementTracking ?? []).map((r: any) => `<div class="req"><span>${esc(r.programName)}: ${esc(r.categoryName)}</span><span>${r.satisfiedCount}/${r.totalCount} ${r.complete ? "complete" : "open"}</span></div>`).join("")}</div><div class="section"><h2>Semester Schedule</h2>${data.semesters.map(s => `<div class="semester"><h3>${esc(s.term.charAt(0).toUpperCase()+s.term.slice(1))} ${s.year} — ${s.totalCredits} credits</h3>${s.courses.map((c: any) => `<div class="course"><span>${esc(c.code)}</span><span>${esc(c.name)}</span><span>${c.credits ?? 0} cr</span><span>${esc(c.status)}</span></div>`).join('')}</div>`).join('')}</div></body></html>`;
+      const html = `<!DOCTYPE html><html><head><title>${esc(data.planName)}</title><style>${PLAN_PRINT_STYLES}</style></head><body><div class="folio">ACADEMIQ / DEGREE DESK EXPORT</div><h1>${esc(data.planName)}</h1><div class="meta">Graduation: ${esc(data.estimatedGraduation)} | ${data.totalCredits}/${data.targetCredits} credits | ${data.totalSemesters} semesters | Generated ${new Date(data.generatedAt).toLocaleDateString()}</div><div class="grid"><div class="box"><div class="val">${(data.scores as any).workload?.toFixed(1)}</div><div class="lbl">Workload</div></div><div class="box"><div class="val">${(data.scores as any).difficulty?.toFixed(1)}</div><div class="lbl">Difficulty</div></div><div class="box"><div class="val">${(data.scores as any).careerReadiness?.toFixed(1)}</div><div class="lbl">Career</div></div><div class="box"><div class="val">${(data.scores as any).overall?.toFixed(1)}</div><div class="lbl">Overall</div></div></div><div class="section"><h2>Plan Health</h2>${issues.length ? issues.map((i: any) => `<div class="issue"><strong>${esc(i.title)}</strong><br>${esc(i.detail)}</div>`).join("") : "<p>No issues detected.</p>"}</div><div class="section"><h2>Requirement Tracking</h2>${(data.requirementTracking ?? []).map((r: any) => `<div class="req"><span>${esc(r.programName)}: ${esc(r.categoryName)}</span><span>${r.satisfiedCount}/${r.totalCount} ${r.complete ? "complete" : "open"}</span></div>`).join("")}</div><div class="section"><h2>Semester Schedule</h2>${data.semesters.map(s => `<div class="semester"><h3>${esc(s.term.charAt(0).toUpperCase()+s.term.slice(1))} ${s.year} — ${s.totalCredits} credits</h3>${s.courses.map((c: any) => `<div class="course"><span>${esc(c.code)}</span><span>${esc(c.name)}</span><span>${c.credits ?? 0} cr</span><span>${esc(c.status)}</span></div>`).join('')}</div>`).join('')}</div></body></html>`;
       const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const win = window.open(url, '_blank');
