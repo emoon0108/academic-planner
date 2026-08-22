@@ -21,15 +21,18 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl, hasLoginConfig } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { BriefcaseBusiness, CalendarRange, LayoutDashboard, LogOut, MessageSquareText, Microscope, PanelLeft } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "Plan desk", path: "/dashboard" },
+  { icon: CalendarRange, label: "Scenarios", path: "/scenarios" },
+  { icon: BriefcaseBusiness, label: "Career track", path: "/career" },
+  { icon: MessageSquareText, label: "Plan coach", path: "/chat" },
+  { icon: Microscope, label: "Catalog research", path: "/research-agent" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -172,7 +175,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                    AcademiQ / Degree desk
                   </span>
                 </div>
               ) : null}

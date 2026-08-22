@@ -141,9 +141,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="academiq-shell min-h-screen bg-background text-foreground">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <nav className="academiq-nav fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -167,17 +167,17 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="pt-28 pb-16 px-4">
+      <section className="academiq-hero pt-28 pb-16 px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-10 items-center">
             <div>
               <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm font-medium border border-primary/20 bg-primary/10 text-primary">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                AI-Powered Academic Planning
+                Degree audit prototype · UMich-first catalog
               </Badge>
 
               <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-6 leading-[1.08]">
-                Build a degree plan that actually survives registration week.
+                A degree plan that survives <em>registration week.</em>
               </h1>
 
               <p className="text-xl text-muted-foreground max-w-2xl mb-8 leading-relaxed">
@@ -198,7 +198,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="catalog-card rounded-xl border border-border bg-card p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="font-semibold">Search Your University</h2>
@@ -251,7 +251,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-10 px-4">
+      <section className="plan-preview-section py-10 px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
             <div>
@@ -347,7 +347,7 @@ export default function Home() {
       </section>
 
       {/* Status */}
-      <section className="py-16 px-4">
+      <section className="status-section py-16 px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="rounded-xl border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -379,17 +379,18 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-16 px-4">
+      <section className="machinery-section py-16 px-4">
         <div className="container max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-3">Everything you need to plan smarter</h2>
-            <p className="text-muted-foreground">A complete academic planning engine, not just a static scheduler</p>
+          <div className="machinery-heading mb-12">
+            <span>ENGINE / 06 MODULES</span>
+            <h2 className="text-3xl font-bold mb-3">The machinery under the plan</h2>
+            <p className="text-muted-foreground">Prerequisites, credits, workload, catalog confidence, and career targets stay visible.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map(feature => (
-              <div key={feature.title} className="rounded-xl border border-border bg-card p-6 hover:border-primary/30 transition-all hover:bg-card/80">
-                <div className="w-10 h-10 rounded-lg mb-4 flex items-center justify-center"
-                  style={{ background: `${feature.color}20` }}>
+          <div className="feature-ledger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((feature, index) => (
+              <div key={feature.title} className="feature-entry rounded-xl border border-border bg-card p-6 transition-all">
+                <span className="feature-number">0{index + 1}</span>
+                <div className="feature-icon w-10 h-10 mb-4 flex items-center justify-center">
                   <feature.icon className="w-5 h-5" style={{ color: feature.color }} />
                 </div>
                 <h3 className="font-semibold mb-2">{feature.title}</h3>
@@ -401,10 +402,11 @@ export default function Home() {
       </section>
 
       {/* How it works */}
-      <section className="py-16 px-4">
+      <section className="method-section py-16 px-4">
         <div className="container max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-3">How it works</h2>
+          <div className="method-heading mb-12">
+            <span>FROM TRANSCRIPT TO TERM MAP</span>
+            <h2 className="text-3xl font-bold mb-3">Four moves. Every assumption exposed.</h2>
           </div>
           <div className="space-y-4">
             {[
@@ -413,7 +415,7 @@ export default function Home() {
               { step: "03", title: "Compare and choose", desc: "Review the fastest, lowest-stress, and most flexible paths side by side." },
               { step: "04", title: "Adapt as you go", desc: "Drop a class, add a major, or change your graduation target — the replanning engine updates your schedule automatically." },
             ].map(item => (
-              <div key={item.step} className="flex gap-5 p-5 rounded-xl border border-border bg-card">
+              <div key={item.step} className="method-row flex gap-5 p-5 rounded-xl border border-border bg-card">
                 <div className="text-2xl font-bold text-primary/40 font-mono w-10 shrink-0">{item.step}</div>
                 <div>
                   <h3 className="font-semibold mb-1">{item.title}</h3>
@@ -426,16 +428,16 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-4">
+      <section className="plan-cta py-24 px-4">
         <div className="container max-w-2xl mx-auto text-center">
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-12">
             <GraduationCap className="w-12 h-12 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl font-bold mb-4">Ready to plan your degree?</h2>
+            <h2 className="text-3xl font-bold mb-4">Bring one transcript. Leave with eight accountable terms.</h2>
             <p className="text-muted-foreground mb-8">
-              Join students who use AcademiQ to navigate their academic journey with confidence.
+              Generate a 120-credit baseline, see the risky semester, and keep every catalog assumption in view.
             </p>
             <Button size="lg" onClick={handleGetStarted} className="text-base px-10 h-12">
-              Get Started Free
+              Build my baseline
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
