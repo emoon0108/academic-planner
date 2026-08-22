@@ -154,6 +154,29 @@ describe("Schedule Optimizer", () => {
     expect(plan.scores.workload).toBeGreaterThanOrEqual(0);
     expect(plan.scores.difficulty).toBeGreaterThanOrEqual(0);
   });
+
+  it("balances a standard 120-credit plan across eight study terms", () => {
+    const plan = generatePlan(graph, requiredCourseIds, {
+      ...constraints,
+      targetTotalCredits: 120,
+      targetSemesters: 8,
+      maxSemesters: 8,
+    }, 'most_flexible_path');
+
+    expect(plan.totalCredits).toBe(120);
+    expect(plan.totalSemesters).toBe(8);
+    expect(plan.semesters.every(semester => semester.totalCredits <= 18)).toBe(true);
+    expect(plan.semesters.map(semester => `${semester.term}-${semester.year}`)).toEqual([
+      'fall-2025',
+      'spring-2026',
+      'fall-2026',
+      'spring-2027',
+      'fall-2027',
+      'spring-2028',
+      'fall-2028',
+      'spring-2029',
+    ]);
+  });
 });
 
 // ─── Replanner / Scenario Tests ───────────────────────────────────────────────

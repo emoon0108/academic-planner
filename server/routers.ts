@@ -943,6 +943,7 @@ export const appRouter = router({
         internshipSemester: prefs.internshipSemester,
         careerTrackCourseIds,
         targetTotalCredits: Math.max(0, targetCredits - getUnmappedPriorCreditTotal(profile)),
+        targetSemesters: prefs.earlyGraduation ? undefined : 8,
         maxSemesters: Math.max(8, Math.ceil(targetCredits / Math.max(1, prefs.maxCreditsPerSemester ?? 18)) + 2),
       };
 

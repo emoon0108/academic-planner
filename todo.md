@@ -111,11 +111,10 @@
 - [x] Save AP credits to student profile (apCreditsJson field)
 - [x] Ensure optimizer reads AP credits and skips equivalent courses in generated plans
 
-## Ivy League Plan Generation Bugs
-- [ ] Fix: plans only generating 3 semesters instead of 8 (should be 4 years)
-- [ ] Fix: plans showing only 38 credits instead of 120+ credits
-- [ ] Fix: courses from unrelated majors appearing in single-major plans
-- [ ] Fix: semester ordering wrong (spring before fall in sequence)
-- [ ] Fix: seed data — each Ivy major needs enough courses to fill 120 credits
-- [ ] Fix: optimizer totalSemesters and totalCreditsRequired logic
-- [ ] Fix: optimizer must respect the student's selected major when filtering courses
+## Ivy League Plan Generation Reliability
+- [x] Generate a standard plan across 8 semesters unless early graduation is requested
+- [x] Fill the complete degree credit target, including explicit general-education/elective placeholders
+- [x] Scope required courses to the selected major, optional second major, and selected minors
+- [x] Keep fall/spring terms in chronological order
+- [x] Preserve a 120-credit minimum for bachelor's programs
+- [x] Cover credit totals, semester count, and term ordering with automated tests

@@ -69,13 +69,13 @@ function nextSemester(
   term: 'fall' | 'spring' | 'summer',
   avoidSummer: boolean
 ): { year: number; term: 'fall' | 'spring' | 'summer' } {
-  if (term === 'fall') return { year, term: 'spring' };
+  if (term === 'fall') return { year: year + 1, term: 'spring' };
   if (term === 'spring') {
     if (!avoidSummer) return { year, term: 'summer' };
-    return { year: year + 1, term: 'fall' };
+    return { year, term: 'fall' };
   }
   // summer
-  return { year: year + 1, term: 'fall' };
+  return { year, term: 'fall' };
 }
 
 function isCourseAvailable(course: CourseNode, term: 'fall' | 'spring' | 'summer'): boolean {
@@ -166,6 +166,21 @@ export function generatePlan(
       continue;
     }
 
+    // Spread a fixed-duration plan across the requested number of study terms.
+    // Without this limit, a 120-credit four-year plan is greedily compressed
+    // into seven 18-credit terms even when the student did not request early
+    // graduation.
+    const remainingStudyTerms = constraints.targetSemesters
+      ? Math.max(1, constraints.targetSemesters - semesters.length)
+      : undefined;
+    const remainingPlanCredits = Math.max(0, targetTotalCredits - plannedCredits);
+    const semesterCreditLimit = remainingStudyTerms && remainingPlanCredits > 0
+      ? Math.min(
+          constraints.maxCreditsPerSemester,
+          Math.max(constraints.minCreditsPerSemester, Math.ceil(remainingPlanCredits / remainingStudyTerms)),
+        )
+      : constraints.maxCreditsPerSemester;
+
     // Sort eligible courses based on variant strategy
     const sorted = sortCoursesByVariant(eligible, graph, variant, constraints, completed, remaining);
 
@@ -175,7 +190,7 @@ export function generatePlan(
 
     for (const id of sorted) {
       const course = graph.nodes.get(id)!;
-      if (credits + course.credits > constraints.maxCreditsPerSemester) continue;
+      if (credits + course.credits > semesterCreditLimit) continue;
       selected.push(id);
       credits += course.credits;
       if (variant === 'lowest_stress_path' && credits >= 15) break; // cap at 15 for low stress
@@ -187,7 +202,7 @@ export function generatePlan(
       for (const id of sorted) {
         if (selected.includes(id)) continue;
         const course = graph.nodes.get(id)!;
-        if (credits + course.credits <= constraints.maxCreditsPerSemester) {
+        if (credits + course.credits <= semesterCreditLimit) {
           selected.push(id);
           credits += course.credits;
         }
@@ -195,8 +210,8 @@ export function generatePlan(
     }
 
     const remainingTargetCredits = Math.max(0, targetTotalCredits - plannedCredits - credits);
-    if (remainingTargetCredits > 0 && credits < constraints.maxCreditsPerSemester) {
-      const openCredits = constraints.maxCreditsPerSemester - credits;
+    if (remainingTargetCredits > 0 && credits < semesterCreditLimit) {
+      const openCredits = semesterCreditLimit - credits;
       const preferredFloor = selected.length === 0 ? constraints.minCreditsPerSemester : 0;
       const fillerCredits = Math.min(openCredits, Math.max(preferredFloor, remainingTargetCredits));
       if (fillerCredits > 0) {

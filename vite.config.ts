@@ -167,6 +167,9 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // The markdown/diagram runtime is isolated in the lazy-loaded chat route;
+    // keep Vite's warning focused on regressions beyond that known chunk.
+    chunkSizeWarningLimit: 950,
   },
   server: {
     host: true,
