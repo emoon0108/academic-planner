@@ -1,7 +1,11 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { invokeLLM } from "../_core/llm";
-import { retrieveUniversityResearch, type UniversityResearchSource } from "./universityResearch";
+import {
+  retrieveUniversityResearch,
+  type UniversityResearchResult,
+  type UniversityResearchSource,
+} from "./universityResearch";
 
 export type ExtractedRequirementCategory = {
   name: string;
@@ -63,7 +67,10 @@ export type CatalogResearchTarget = {
   sourceUrls?: string[];
 };
 
-const STATE_PATH = resolve(process.cwd(), "server/data/catalog-research-updates.json");
+const LEGACY_STATE_PATH = resolve(process.cwd(), "server/data/catalog-research-updates.json");
+const CUSTOM_STATE_PATH = process.env.ACADEMIQ_RESEARCH_STATE_PATH
+  ? resolve(process.env.ACADEMIQ_RESEARCH_STATE_PATH)
+  : null;
 const COURSE_PATTERN = /\b([A-Z]{2,8})\s*[- ]?(\d{3,4}[A-Z]?)\b[:\s-]*([^.;()]{3,100})?(?:\((\d+(?:\.\d+)?)\s*(?:credits?|cr)\))?/gi;
 const REQUIREMENT_PATTERN = /\b(?:requirements?|credits?|prerequisites?|core|electives?|degree|major)\b[^.]{20,220}\./gi;
 const REQUIREMENT_TYPES = new Set<ExtractedRequirementCategory["type"]>([
@@ -82,25 +89,128 @@ function makeUpdateId(schoolName: string, majorName: string) {
     .replace(/^-|-$/g, "");
 }
 
-export async function readCatalogResearchState(): Promise<CatalogResearchState> {
+function statePathFor(scope: string | number) {
+  if (CUSTOM_STATE_PATH && scope === "global") return CUSTOM_STATE_PATH;
+  const safeScope = String(scope).replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 80) || "global";
+  return resolve(process.cwd(), "data/runtime", `catalog-research-${safeScope}.json`);
+}
+
+export async function readCatalogResearchState(scope: string | number = "global"): Promise<CatalogResearchState> {
   try {
-    const raw = await readFile(STATE_PATH, "utf8");
+    const raw = await readFile(statePathFor(scope), "utf8");
     return JSON.parse(raw) as CatalogResearchState;
   } catch {
-    return { updatedAt: null, updates: [] };
+    if (scope !== "global") return { updatedAt: null, updates: [] };
+    try {
+      const legacy = await readFile(LEGACY_STATE_PATH, "utf8");
+      return JSON.parse(legacy) as CatalogResearchState;
+    } catch {
+      return { updatedAt: null, updates: [] };
+    }
   }
 }
 
-export async function writeCatalogResearchState(state: CatalogResearchState) {
-  await mkdir(dirname(STATE_PATH), { recursive: true });
-  await writeFile(STATE_PATH, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+export async function writeCatalogResearchState(state: CatalogResearchState, scope: string | number = "global") {
+  const statePath = statePathFor(scope);
+  await mkdir(dirname(statePath), { recursive: true });
+  await writeFile(statePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
 }
 
-function extractCoursesFromSources(sources: UniversityResearchSource[]) {
+function parseCsvRows(text: string, maxRows = 5_000) {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length && rows.length < maxRows; index += 1) {
+    const character = text[index];
+    if (character === '"') {
+      if (quoted && text[index + 1] === '"') {
+        field += '"';
+        index += 1;
+      } else {
+        quoted = !quoted;
+      }
+      continue;
+    }
+    if (character === "," && !quoted) {
+      row.push(field.trim());
+      field = "";
+      continue;
+    }
+    if ((character === "\n" || character === "\r") && !quoted) {
+      if (character === "\r" && text[index + 1] === "\n") index += 1;
+      row.push(field.trim());
+      field = "";
+      if (row.some(Boolean)) rows.push(row);
+      row = [];
+      continue;
+    }
+    field += character;
+  }
+
+  if ((field || row.length > 0) && rows.length < maxRows) {
+    row.push(field.trim());
+    if (row.some(Boolean)) rows.push(row);
+  }
+  return rows;
+}
+
+function normalizedHeader(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function findColumn(headers: string[], aliases: string[]) {
+  return headers.findIndex(header => aliases.includes(header));
+}
+
+function extractCoursesFromCsv(source: UniversityResearchSource): CatalogResearchUpdate["extractedCourses"] {
+  const rows = parseCsvRows(source.excerpt);
+  if (rows.length < 2) return [];
+
+  const headers = rows[0].map(normalizedHeader);
+  const subjectIndex = findColumn(headers, ["subject", "subjectcode", "subj"]);
+  const catalogIndex = findColumn(headers, ["catalognbr", "catalognumber", "catalogno", "coursenumber", "coursenum"]);
+  const titleIndex = findColumn(headers, ["coursetitle", "title", "longtitle", "description"]);
+  const creditsIndex = findColumn(headers, ["credits", "credit", "units", "minimumunits", "minunits"]);
+  if (subjectIndex < 0 || catalogIndex < 0) return [];
+
+  const courses = new Map<string, CatalogResearchUpdate["extractedCourses"][number]>();
+  for (const row of rows.slice(1)) {
+    const subject = (row[subjectIndex] ?? "").toUpperCase().replace(/[^A-Z]/g, "");
+    const catalog = (row[catalogIndex] ?? "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+    if (!/^[A-Z]{2,8}$/.test(subject) || !/^\d{3,4}[A-Z]?$/.test(catalog)) continue;
+
+    const code = `${subject} ${catalog}`;
+    const parsedCredits = Number.parseFloat(row[creditsIndex] ?? "");
+    const name = (row[titleIndex] ?? "Catalog course").replace(/\s+/g, " ").trim().slice(0, 256) || "Catalog course";
+    if (!courses.has(code)) {
+      courses.set(code, {
+        code,
+        name,
+        credits: Number.isFinite(parsedCredits) && parsedCredits > 0 ? parsedCredits : null,
+        sourceUrl: source.url,
+      });
+    }
+    if (courses.size >= 40) break;
+  }
+  return Array.from(courses.values());
+}
+
+export function extractCoursesFromSources(sources: UniversityResearchSource[]) {
   const seen = new Set<string>();
   const courses: CatalogResearchUpdate["extractedCourses"] = [];
 
   for (const source of sources) {
+    if (source.kind === "csv" || source.mimeType === "text/csv") {
+      for (const course of extractCoursesFromCsv(source)) {
+        if (seen.has(course.code)) continue;
+        seen.add(course.code);
+        courses.push(course);
+        if (courses.length >= 40) return courses;
+      }
+    }
+
     const matches = Array.from(source.excerpt.matchAll(COURSE_PATTERN));
     for (const match of matches) {
       const code = `${match[1].toUpperCase()} ${match[2].toUpperCase()}`;
@@ -112,7 +222,7 @@ function extractCoursesFromSources(sources: UniversityResearchSource[]) {
         credits: match[4] ? Number(match[4]) : null,
         sourceUrl: source.url,
       });
-      if (courses.length >= 24) return courses;
+      if (courses.length >= 40) return courses;
     }
   }
 
@@ -300,8 +410,69 @@ async function extractStructuredRequirements({
   }
 }
 
-export async function runCatalogResearchCycle(targets: CatalogResearchTarget[] = DEFAULT_RESEARCH_TARGETS.slice(0, 3)) {
-  const state = await readCatalogResearchState();
+async function buildCatalogResearchUpdate(
+  target: Pick<CatalogResearchTarget, "schoolName" | "majorName">,
+  result: UniversityResearchResult
+): Promise<CatalogResearchUpdate> {
+  const extractedCourses = extractCoursesFromSources(result.sources);
+  const requirementHints = extractRequirementHints(result.sources);
+  const structured = await extractStructuredRequirements({
+    schoolName: target.schoolName,
+    majorName: target.majorName,
+    sources: result.sources,
+  });
+  const structuredCourses = structured.categories.flatMap(category =>
+    category.courses.map(course => ({
+      code: course.code,
+      name: course.name,
+      credits: course.credits,
+      sourceUrl: category.sourceUrl,
+    }))
+  );
+  const mergedCourses = [...structuredCourses, ...extractedCourses].filter((course, index, all) =>
+    all.findIndex(item => item.code === course.code) === index
+  );
+  const hasEvidence = structured.categories.length > 0 || mergedCourses.length > 0 || requirementHints.length > 0;
+  const confidence = result.sources.length >= 2 && hasEvidence
+    ? "high"
+    : result.sources.length > 0
+      ? "medium"
+      : "low";
+
+  return {
+    id: makeUpdateId(target.schoolName, target.majorName),
+    schoolName: target.schoolName,
+    majorName: target.majorName,
+    status: result.sources.length > 0 ? "sources_found" : "no_sources_found",
+    confidence,
+    sources: result.sources,
+    extractedCourses: mergedCourses,
+    structuredRequirements: structured.categories,
+    requirementHints,
+    notes: [
+      ...result.notes,
+      ...structured.notes,
+      "Review this update before converting it into production degree requirements.",
+    ],
+    createdAt: new Date().toISOString(),
+  };
+}
+
+async function prependResearchUpdates(newUpdates: CatalogResearchUpdate[], scope: string | number) {
+  const state = await readCatalogResearchState(scope);
+
+  const nextState = {
+    updatedAt: new Date().toISOString(),
+    updates: [...newUpdates, ...state.updates].slice(0, 100),
+  };
+  await writeCatalogResearchState(nextState, scope);
+  return nextState;
+}
+
+export async function runCatalogResearchCycle(
+  targets: CatalogResearchTarget[] = DEFAULT_RESEARCH_TARGETS.slice(0, 3),
+  scope: string | number = "global"
+) {
   const newUpdates: CatalogResearchUpdate[] = [];
 
   for (const target of targets) {
@@ -313,53 +484,35 @@ export async function runCatalogResearchCycle(targets: CatalogResearchTarget[] =
         ...(target.sourceUrls ?? []),
       ].join("\n"),
     });
-    const extractedCourses = extractCoursesFromSources(result.sources);
-    const requirementHints = extractRequirementHints(result.sources);
-    const structured = await extractStructuredRequirements({
-      schoolName: target.schoolName,
-      majorName: target.majorName,
-      sources: result.sources,
-    });
-    const structuredCourses = structured.categories.flatMap(category =>
-      category.courses.map(course => ({
-        code: course.code,
-        name: course.name,
-        credits: course.credits,
-        sourceUrl: category.sourceUrl,
-      }))
-    );
-    const mergedCourses = [...structuredCourses, ...extractedCourses].filter((course, index, all) =>
-      all.findIndex(item => item.code === course.code) === index
-    );
-    const confidence = result.sources.length >= 2 && (structured.categories.length > 0 || mergedCourses.length > 0 || requirementHints.length > 0)
-      ? "high"
-      : result.sources.length > 0
-        ? "medium"
-        : "low";
-
-    newUpdates.push({
-      id: makeUpdateId(target.schoolName, target.majorName),
-      schoolName: target.schoolName,
-      majorName: target.majorName,
-      status: result.sources.length > 0 ? "sources_found" : "no_sources_found",
-      confidence,
-      sources: result.sources,
-      extractedCourses: mergedCourses,
-      structuredRequirements: structured.categories,
-      requirementHints,
-      notes: [
-        ...result.notes,
-        ...structured.notes,
-        "Review this update before converting it into production degree requirements.",
-      ],
-      createdAt: new Date().toISOString(),
-    });
+    newUpdates.push(await buildCatalogResearchUpdate(target, result));
   }
 
-  const nextState = {
-    updatedAt: new Date().toISOString(),
-    updates: [...newUpdates, ...state.updates].slice(0, 100),
-  };
-  await writeCatalogResearchState(nextState);
-  return nextState;
+  return prependResearchUpdates(newUpdates, scope);
+}
+
+export async function runCatalogResearchImport({
+  schoolName,
+  majorName,
+  sources,
+  scope = "global",
+}: {
+  schoolName: string;
+  majorName: string;
+  sources: UniversityResearchSource[];
+  scope?: string | number;
+}) {
+  const update = await buildCatalogResearchUpdate(
+    { schoolName, majorName },
+    {
+      status: sources.length > 0 ? "sources_found" : "no_sources_found",
+      sources,
+      notes: [
+        `${sources.length} uploaded source${sources.length === 1 ? " was" : "s were"} parsed locally.`,
+        "When structured AI extraction is configured, source excerpts are sent to that model provider for schema extraction.",
+        "Uploaded sources are evidence candidates, not trusted catalog records, until reviewed and approved.",
+      ],
+    }
+  );
+
+  return prependResearchUpdates([update], scope);
 }

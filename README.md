@@ -14,7 +14,9 @@ This public portfolio project includes an in-memory demo path, so the planning e
 - Dynamic replanning for dropped courses, changed majors, and graduation targets
 - React 19 + Vite client with route-level code splitting and a dark OKLCH design system
 - Type-safe tRPC API, Drizzle ORM schema, MySQL persistence, and Zod validation
-- Context-aware AI advising and a catalog research workflow with deterministic fallbacks
+- Source workspace for discovering official websites or importing PDF, CSV, HTML, Markdown, and text evidence
+- Review-gated requirement extraction with per-source provenance, content hashes, and deterministic fallbacks
+- Context-aware AI advising that keeps the deterministic planner as the source of truth
 
 ## Architecture
 
@@ -22,12 +24,16 @@ This public portfolio project includes an in-memory demo path, so the planning e
 React/Vite client
       │
       ▼
-tRPC routers ──► planning + replanning engines
-      │                    │
-      ▼                    ▼
-Drizzle/MySQL       prerequisite graph + scoring
+tRPC routers ──────► planning + replanning engines
+      │                         │
+      ▼                         ▼
+source workspace        prerequisite graph + scoring
+  │            │
+  │            └──► imported PDF / CSV / HTML / text
+  └───────────────► official web discovery
       │
-      └────────────► catalog research + AI advising
+      ▼
+reviewed extraction ──► Drizzle/MySQL catalog ──► AI advising
 ```
 
 The deterministic planner remains the source of truth. AI features explain plans and assist catalog research; they do not bypass scheduling constraints.
@@ -54,17 +60,19 @@ With no environment file, AcademiQ starts in a local demo mode backed by in-memo
 pnpm verify
 ```
 
-This runs the TypeScript check, 43 unit/integration tests, the production client build, and the bundled server build. Tests cover graph ordering, plan generation, eight-term credit balancing, replanning, account deletion/reset, session-secret enforcement, authentication, and academic-agent fallbacks.
+This runs the TypeScript check, 49 unit/integration tests, the production client build, and the bundled server build. Tests cover graph ordering, plan generation, eight-term credit balancing, replanning, account deletion/reset, session-secret enforcement, authentication, source parsing, and academic-agent fallbacks.
 
 ## Current scope
 
 - Course-catalog freshness depends on reviewed seed/research imports.
+- Website discovery depends on the configured search provider; users can always provide official URLs directly.
+- Imported source text may be sent to the configured extraction model. Do not upload transcripts or student records.
 - General-education credits that are not mapped to a specific catalog course are labeled as placeholders instead of being presented as verified course recommendations.
 - Authentication and database credentials are environment-specific and are intentionally excluded from source control.
 
 ## Data and security
 
-The bundled catalog records are prototype fixtures assembled from public academic information and are not authoritative advising data. Verify course availability, prerequisites, and degree rules with the relevant institution before making enrollment decisions. Do not use real student records in a public demo environment.
+The bundled catalog records are prototype fixtures assembled from public academic information and are not authoritative advising data. Verify course availability, prerequisites, and degree rules with the relevant institution before making enrollment decisions. Do not use real student records in a public demo environment. Imported evidence is stored in the ignored runtime-data directory by default so that uploaded excerpts are not accidentally committed.
 
 Please report security concerns using the process in [SECURITY.md](SECURITY.md).
 

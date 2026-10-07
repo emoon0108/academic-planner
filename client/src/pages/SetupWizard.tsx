@@ -320,7 +320,7 @@ export default function SetupWizard() {
                     <div>
                       <div className="text-sm font-medium">Add a school with AI research</div>
                       <p className="text-xs text-muted-foreground">
-                      Add an official catalog URL for the best results. Review and approve the result on the Research Agent page.
+                      Add an official catalog URL for the best results. Review and approve the evidence on the Sources page.
                       </p>
                     </div>
                   </div>
@@ -361,7 +361,7 @@ export default function SetupWizard() {
                       onClick={() => navigate('/research-agent')}
                       className="sm:w-auto"
                     >
-                      Open Research Agent
+                      Open Sources
                     </Button>
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function SetupWizard() {
                   <div className="mt-3 rounded-lg border border-border bg-secondary/20 p-3 text-xs text-muted-foreground flex gap-2">
                     <Search className="w-4 h-4 shrink-0 text-primary" />
                     <span>
-                      Selecting a primary major starts an official catalog research pass in the background. Import reviewed findings from the Research Agent page before relying on them for advising.
+                      Selecting a primary major starts an official source search in the background. Review and approve findings on the Sources page before relying on them for advising.
                     </span>
                   </div>
                 </div>

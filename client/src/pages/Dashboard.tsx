@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { href: "/career", label: "Career Tracks", icon: Target },
   { href: "/scenarios", label: "Scenario Simulation", icon: FlaskConical },
   { href: "/chat", label: "AI Assistant", icon: MessageSquare },
-  { href: "/research-agent", label: "Research Agent", icon: Search },
+  { href: "/research-agent", label: "Sources", icon: Search },
 ];
 
 const SETTINGS_NAV = [
@@ -459,7 +459,7 @@ export default function Dashboard() {
               {[
                 { label: "Scenario Simulation", desc: "What if I drop a class?", icon: FlaskConical, href: "/scenarios", color: "oklch(0.65 0.22 270)" },
                 { label: "Career Optimization", desc: "Align courses with your goals", icon: Target, href: "/career", color: "oklch(0.70 0.18 200)" },
-                { label: "Research Agent", desc: "Find official degree requirements", icon: Search, href: "/research-agent", color: "oklch(0.72 0.18 150)" },
+                { label: "Sources", desc: "Find or import official requirements", icon: Search, href: "/research-agent", color: "oklch(0.72 0.18 150)" },
               ].map(action => (
                 <button
                   key={action.label}

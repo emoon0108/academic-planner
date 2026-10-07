@@ -87,7 +87,7 @@
 ## Phase 9: Testing & Polish
 - [x] Vitest unit tests for core engine (graph builder, optimizer, replanning) — 22 tests
 - [x] Vitest auth test — 1 test
-- [x] All 23 tests passing
+- [x] All 49 tests passing (including source parsing and research imports)
 - [x] Final checkpoint and delivery
 
 ## Ivy League Expansion

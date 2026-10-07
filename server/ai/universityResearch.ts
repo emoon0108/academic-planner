@@ -2,9 +2,16 @@ import { callDataApi } from "../_core/dataApi";
 import { ENV } from "../_core/env";
 
 export type UniversityResearchSource = {
+  id?: string;
   title: string;
   url: string;
   excerpt: string;
+  kind?: "web" | "pdf" | "csv" | "html" | "text";
+  origin?: "discovered" | "provided_url" | "upload";
+  mimeType?: string;
+  byteLength?: number;
+  contentHash?: string;
+  retrievedAt?: string;
 };
 
 export type UniversityResearchResult = {
@@ -114,7 +121,10 @@ function titleFromHtml(html: string, fallbackUrl: string) {
   }
 }
 
-async function fetchSource(url: string): Promise<UniversityResearchSource | null> {
+async function fetchSource(
+  url: string,
+  origin: "discovered" | "provided_url"
+): Promise<UniversityResearchSource | null> {
   const cached = sourceCache.get(url);
   if (cached) return cached;
 
@@ -138,6 +148,10 @@ async function fetchSource(url: string): Promise<UniversityResearchSource | null
         title: url,
         url,
         excerpt: "PDF source found. Open this official document to verify exact wording before relying on the policy.",
+        kind: "pdf" as const,
+        origin,
+        mimeType: contentType,
+        retrievedAt: new Date().toISOString(),
       };
       sourceCache.set(url, source);
       return source;
@@ -151,6 +165,10 @@ async function fetchSource(url: string): Promise<UniversityResearchSource | null
       title: titleFromHtml(html, url),
       url,
       excerpt: text,
+      kind: "web" as const,
+      origin,
+      mimeType: contentType || "text/html",
+      retrievedAt: new Date().toISOString(),
     };
     sourceCache.set(url, source);
     return source;
@@ -246,7 +264,7 @@ export async function retrieveUniversityResearch({
     .slice(0, MAX_DIRECT_URLS);
 
   for (const url of directUrls) {
-    const source = await fetchSource(url);
+    const source = await fetchSource(url, "provided_url");
     if (source) sourceMap.set(source.url, source);
   }
 
@@ -262,7 +280,7 @@ export async function retrieveUniversityResearch({
       if (!url || sourceMap.has(url)) continue;
       if (!isProbablyOfficialUniversityUrl(url, schoolName)) continue;
 
-      const fetched = await fetchSource(url);
+      const fetched = await fetchSource(url, "discovered");
       if (fetched) {
         sourceMap.set(url, {
           ...fetched,

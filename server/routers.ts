@@ -21,8 +21,10 @@ import {
   DEFAULT_RESEARCH_TARGETS,
   readCatalogResearchState,
   runCatalogResearchCycle,
+  runCatalogResearchImport,
   writeCatalogResearchState,
 } from "./ai/catalogResearchAgent";
+import { createImportedSource, MAX_IMPORTED_SOURCE_BYTES } from "./ai/sourceDocuments";
 import * as db from "./db";
 import { buildCourseGraph, getGraphVisualizationData, prerequisitesSatisfied, CourseNode, PrerequisiteEdge } from "./engine/graph";
 import { generateAllVariants, generatePlan, isPlaceholderCourseId, ScheduleConstraints, GeneratedPlan } from "./engine/optimizer";
@@ -729,27 +731,63 @@ export const appRouter = router({
   }),
 
   researchAgent: router({
-    status: publicProcedure.query(async () => {
+    status: protectedProcedure.query(async ({ ctx }) => {
       return {
         watchlist: DEFAULT_RESEARCH_TARGETS,
-        state: await readCatalogResearchState(),
+        state: await readCatalogResearchState(ctx.user.id),
       };
     }),
 
-    runOnce: publicProcedure.input(z.object({
+    runOnce: protectedProcedure.input(z.object({
       targets: z.array(z.object({
         schoolName: z.string().min(2),
         majorName: z.string().min(2),
         sourceUrls: z.array(z.string().url()).max(5).optional(),
       })).min(1).max(8).optional(),
-    }).optional()).mutation(async ({ input }) => {
-      return runCatalogResearchCycle(input?.targets);
+    }).optional()).mutation(async ({ ctx, input }) => {
+      return runCatalogResearchCycle(input?.targets, ctx.user.id);
     }),
 
-    approveImport: publicProcedure.input(z.object({
+    importSources: protectedProcedure.input(z.object({
+      schoolName: z.string().trim().min(2).max(160),
+      majorName: z.string().trim().min(2).max(160),
+      files: z.array(z.object({
+        name: z.string().trim().min(1).max(180),
+        mimeType: z.string().max(120),
+        dataBase64: z.string().min(1).max(Math.ceil(MAX_IMPORTED_SOURCE_BYTES * 4 / 3) + 128),
+      })).min(1).max(4),
+    })).mutation(async ({ ctx, input }) => {
+      let sources;
+      try {
+        sources = await Promise.all(input.files.map(file => createImportedSource(file)));
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error instanceof Error ? error.message : "The source could not be imported.",
+        });
+      }
+
+      const uniqueSources = Array.from(new Map(
+        sources.map(source => [source.contentHash ?? source.url, source]),
+      ).values());
+
+      const state = await runCatalogResearchImport({
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources: uniqueSources,
+        scope: ctx.user.id,
+      });
+      return {
+        state,
+        update: state.updates[0],
+        duplicateCount: sources.length - uniqueSources.length,
+      };
+    }),
+
+    approveImport: protectedProcedure.input(z.object({
       updateId: z.string(),
-    })).mutation(async ({ input }) => {
-      const state = await readCatalogResearchState();
+    })).mutation(async ({ ctx, input }) => {
+      const state = await readCatalogResearchState(ctx.user.id);
       const update = state.updates.find(item => item.id === input.updateId);
       if (!update) throw new TRPCError({ code: "NOT_FOUND", message: "Research update not found." });
       if (update.extractedCourses.length === 0) {
@@ -877,7 +915,7 @@ export const appRouter = router({
             }
           : item),
       };
-      await writeCatalogResearchState(nextState);
+      await writeCatalogResearchState(nextState, ctx.user.id);
 
       return {
         schoolId: school.id,
