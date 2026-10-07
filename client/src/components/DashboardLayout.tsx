@@ -32,7 +32,7 @@ const menuItems = [
   { icon: CalendarRange, label: "Scenarios", path: "/scenarios" },
   { icon: BriefcaseBusiness, label: "Career track", path: "/career" },
   { icon: MessageSquareText, label: "Plan coach", path: "/chat" },
-  { icon: Microscope, label: "Catalog research", path: "/research-agent" },
+  { icon: Microscope, label: "Sources", path: "/research-agent" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

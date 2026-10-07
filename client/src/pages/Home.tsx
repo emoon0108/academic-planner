@@ -229,7 +229,7 @@ export default function Home() {
                   <p className="text-sm text-muted-foreground">
                     {searchedSupported
                       ? "You can start setup and generate plans with available catalog data."
-                      : "Send it to the Research Agent so official catalog sources can be found and approved."}
+                      : "Send it to Sources so official catalog evidence can be found and approved."}
                   </p>
                 </div>
               )}
@@ -357,7 +357,7 @@ export default function Home() {
               </div>
               <Button variant="outline" className="bg-secondary/50" onClick={() => isAuthenticated ? navigate("/research-agent") : handleGetStarted()}>
                 <Database className="w-4 h-4 mr-2" />
-                Open Research Agent
+                Open Sources
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

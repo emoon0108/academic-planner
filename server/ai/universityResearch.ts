@@ -1,10 +1,19 @@
 import { callDataApi } from "../_core/dataApi";
 import { ENV } from "../_core/env";
+import { scrapeWebSource } from "./webSources";
 
 export type UniversityResearchSource = {
+  id?: string;
   title: string;
   url: string;
+  requestedUrl?: string;
   excerpt: string;
+  kind?: "web" | "pdf" | "csv" | "html" | "text";
+  origin?: "discovered" | "provided_url" | "upload";
+  mimeType?: string;
+  byteLength?: number;
+  contentHash?: string;
+  retrievedAt?: string;
 };
 
 export type UniversityResearchResult = {
@@ -114,50 +123,19 @@ function titleFromHtml(html: string, fallbackUrl: string) {
   }
 }
 
-async function fetchSource(url: string): Promise<UniversityResearchSource | null> {
+async function fetchSource(
+  url: string,
+  origin: "discovered" | "provided_url"
+): Promise<UniversityResearchSource | null> {
   const cached = sourceCache.get(url);
   if (cached) return cached;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        accept: "text/html,application/xhtml+xml,application/pdf;q=0.8,text/plain;q=0.7,*/*;q=0.5",
-        "user-agent": "AcademiQ academic planning research bot",
-      },
-      signal: controller.signal,
-    });
-
-    if (!response.ok) return null;
-
-    const contentType = response.headers.get("content-type") ?? "";
-    if (contentType.includes("application/pdf")) {
-      const source = {
-        title: url,
-        url,
-        excerpt: "PDF source found. Open this official document to verify exact wording before relying on the policy.",
-      };
-      sourceCache.set(url, source);
-      return source;
-    }
-
-    const html = await response.text();
-    const text = stripHtml(html).slice(0, 1800);
-    if (!text) return null;
-
-    const source = {
-      title: titleFromHtml(html, url),
-      url,
-      excerpt: text,
-    };
+    const source = { ...await scrapeWebSource(url), origin };
     sourceCache.set(url, source);
     return source;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
@@ -246,7 +224,7 @@ export async function retrieveUniversityResearch({
     .slice(0, MAX_DIRECT_URLS);
 
   for (const url of directUrls) {
-    const source = await fetchSource(url);
+    const source = await fetchSource(url, "provided_url");
     if (source) sourceMap.set(source.url, source);
   }
 
@@ -262,7 +240,7 @@ export async function retrieveUniversityResearch({
       if (!url || sourceMap.has(url)) continue;
       if (!isProbablyOfficialUniversityUrl(url, schoolName)) continue;
 
-      const fetched = await fetchSource(url);
+      const fetched = await fetchSource(url, "discovered");
       if (fetched) {
         sourceMap.set(url, {
           ...fetched,

@@ -21,8 +21,18 @@ import {
   DEFAULT_RESEARCH_TARGETS,
   readCatalogResearchState,
   runCatalogResearchCycle,
+  runCatalogResearchImport,
   writeCatalogResearchState,
 } from "./ai/catalogResearchAgent";
+import { createImportedSource, MAX_IMPORTED_SOURCE_BYTES } from "./ai/sourceDocuments";
+import {
+  readSourceLibrary,
+  removeSourceFromLibrary,
+  saveFailedWebSource,
+  saveSourcesToLibrary,
+  sourceFreshness,
+} from "./ai/sourceLibrary";
+import { scrapeWebSource } from "./ai/webSources";
 import * as db from "./db";
 import { buildCourseGraph, getGraphVisualizationData, prerequisitesSatisfied, CourseNode, PrerequisiteEdge } from "./engine/graph";
 import { generateAllVariants, generatePlan, isPlaceholderCourseId, ScheduleConstraints, GeneratedPlan } from "./engine/optimizer";
@@ -729,27 +739,184 @@ export const appRouter = router({
   }),
 
   researchAgent: router({
-    status: publicProcedure.query(async () => {
+    status: protectedProcedure.query(async ({ ctx }) => {
+      const library = await readSourceLibrary(ctx.user.id);
       return {
         watchlist: DEFAULT_RESEARCH_TARGETS,
-        state: await readCatalogResearchState(),
+        state: await readCatalogResearchState(ctx.user.id),
+        library: {
+          updatedAt: library.updatedAt,
+          sources: library.sources.map(source => {
+            const { excerpt: _excerpt, ...summary } = source;
+            return { ...summary, freshness: sourceFreshness(source) };
+          }),
+        },
       };
     }),
 
-    runOnce: publicProcedure.input(z.object({
+    runOnce: protectedProcedure.input(z.object({
       targets: z.array(z.object({
         schoolName: z.string().min(2),
         majorName: z.string().min(2),
         sourceUrls: z.array(z.string().url()).max(5).optional(),
       })).min(1).max(8).optional(),
-    }).optional()).mutation(async ({ input }) => {
-      return runCatalogResearchCycle(input?.targets);
+    }).optional()).mutation(async ({ ctx, input }) => {
+      const targets = input?.targets ?? DEFAULT_RESEARCH_TARGETS.slice(0, 3);
+      const state = await runCatalogResearchCycle(targets, ctx.user.id);
+      const updates = state.updates.slice(0, targets.length);
+      for (const update of updates) {
+        if (update.sources.length > 0) {
+          await saveSourcesToLibrary({
+            scope: ctx.user.id,
+            schoolName: update.schoolName,
+            majorName: update.majorName,
+            sources: update.sources,
+          });
+        }
+      }
+      return state;
     }),
 
-    approveImport: publicProcedure.input(z.object({
+    scrapeUrls: protectedProcedure.input(z.object({
+      schoolName: z.string().trim().min(2).max(160),
+      majorName: z.string().trim().min(2).max(160),
+      urls: z.array(z.string().url()).min(1).max(4),
+    })).mutation(async ({ ctx, input }) => {
+      const sources = [];
+      const failures: Array<{ url: string; error: string }> = [];
+      for (const url of Array.from(new Set(input.urls))) {
+        try {
+          sources.push(await scrapeWebSource(url));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "The website could not be retrieved.";
+          failures.push({ url, error: message });
+          await saveFailedWebSource({
+            scope: ctx.user.id,
+            schoolName: input.schoolName,
+            majorName: input.majorName,
+            url,
+            error: message,
+          });
+        }
+      }
+
+      if (sources.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: failures[0]?.error ?? "No websites could be retrieved.",
+        });
+      }
+
+      await saveSourcesToLibrary({
+        scope: ctx.user.id,
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources,
+      });
+      const state = await runCatalogResearchImport({
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources,
+        scope: ctx.user.id,
+      });
+      return { state, update: state.updates[0], failures };
+    }),
+
+    importSources: protectedProcedure.input(z.object({
+      schoolName: z.string().trim().min(2).max(160),
+      majorName: z.string().trim().min(2).max(160),
+      files: z.array(z.object({
+        name: z.string().trim().min(1).max(180),
+        mimeType: z.string().max(120),
+        dataBase64: z.string().min(1).max(Math.ceil(MAX_IMPORTED_SOURCE_BYTES * 4 / 3) + 128),
+      })).min(1).max(4),
+    })).mutation(async ({ ctx, input }) => {
+      let sources;
+      try {
+        sources = await Promise.all(input.files.map(file => createImportedSource(file)));
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error instanceof Error ? error.message : "The source could not be imported.",
+        });
+      }
+
+      const uniqueSources = Array.from(new Map(
+        sources.map(source => [source.contentHash ?? source.url, source]),
+      ).values());
+
+      await saveSourcesToLibrary({
+        scope: ctx.user.id,
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources: uniqueSources,
+      });
+
+      const state = await runCatalogResearchImport({
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources: uniqueSources,
+        scope: ctx.user.id,
+      });
+      return {
+        state,
+        update: state.updates[0],
+        duplicateCount: sources.length - uniqueSources.length,
+      };
+    }),
+
+    refreshSource: protectedProcedure.input(z.object({
+      sourceId: z.string().min(1).max(64),
+    })).mutation(async ({ ctx, input }) => {
+      const library = await readSourceLibrary(ctx.user.id);
+      const existing = library.sources.find(source => source.id === input.sourceId);
+      if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Source not found." });
+      if (!existing.url.startsWith("http://") && !existing.url.startsWith("https://")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Uploaded files cannot be refreshed from the web." });
+      }
+
+      let refreshed;
+      try {
+        refreshed = await scrapeWebSource(existing.requestedUrl ?? existing.url);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "The website could not be refreshed.";
+        await saveFailedWebSource({
+          scope: ctx.user.id,
+          schoolName: existing.schoolName,
+          majorName: existing.majorName,
+          url: existing.requestedUrl ?? existing.url,
+          error: message,
+        });
+        throw new TRPCError({ code: "BAD_REQUEST", message });
+      }
+
+      await saveSourcesToLibrary({
+        scope: ctx.user.id,
+        schoolName: existing.schoolName,
+        majorName: existing.majorName,
+        sources: [refreshed],
+      });
+      const state = await runCatalogResearchImport({
+        schoolName: existing.schoolName,
+        majorName: existing.majorName,
+        sources: [refreshed],
+        scope: ctx.user.id,
+      });
+      return { state, update: state.updates[0] };
+    }),
+
+    removeSource: protectedProcedure.input(z.object({
+      sourceId: z.string().min(1).max(64),
+    })).mutation(async ({ ctx, input }) => {
+      const state = await removeSourceFromLibrary(ctx.user.id, input.sourceId);
+      if (!state) throw new TRPCError({ code: "NOT_FOUND", message: "Source not found." });
+      return state;
+    }),
+
+    approveImport: protectedProcedure.input(z.object({
       updateId: z.string(),
-    })).mutation(async ({ input }) => {
-      const state = await readCatalogResearchState();
+    })).mutation(async ({ ctx, input }) => {
+      const state = await readCatalogResearchState(ctx.user.id);
       const update = state.updates.find(item => item.id === input.updateId);
       if (!update) throw new TRPCError({ code: "NOT_FOUND", message: "Research update not found." });
       if (update.extractedCourses.length === 0) {
@@ -877,7 +1044,7 @@ export const appRouter = router({
             }
           : item),
       };
-      await writeCatalogResearchState(nextState);
+      await writeCatalogResearchState(nextState, ctx.user.id);
 
       return {
         schoolId: school.id,
