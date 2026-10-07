@@ -15,6 +15,8 @@ This public portfolio project includes an in-memory demo path, so the planning e
 - React 19 + Vite client with route-level code splitting and a dark OKLCH design system
 - Type-safe tRPC API, Drizzle ORM schema, MySQL persistence, and Zod validation
 - Source workspace for discovering official websites or importing PDF, CSV, HTML, Markdown, and text evidence
+- Persistent per-user source library with crawl health, seven-day freshness tracking, refresh, and removal controls
+- Bounded single-page web ingestion with redirect validation, private-network blocking, timeouts, and an 8 MB response limit
 - Review-gated requirement extraction with per-source provenance, content hashes, and deterministic fallbacks
 - Context-aware AI advising that keeps the deterministic planner as the source of truth
 
@@ -60,12 +62,13 @@ With no environment file, AcademiQ starts in a local demo mode backed by in-memo
 pnpm verify
 ```
 
-This runs the TypeScript check, 49 unit/integration tests, the production client build, and the bundled server build. Tests cover graph ordering, plan generation, eight-term credit balancing, replanning, account deletion/reset, session-secret enforcement, authentication, source parsing, and academic-agent fallbacks.
+This runs the TypeScript check, 57 unit/integration tests, the production client build, and the bundled server build. Tests cover graph ordering, plan generation, eight-term credit balancing, replanning, account deletion/reset, session-secret enforcement, authentication, source parsing, safe web ingestion, source freshness, and academic-agent fallbacks.
 
 ## Current scope
 
 - Course-catalog freshness depends on reviewed seed/research imports.
 - Website discovery depends on the configured search provider; users can always provide official URLs directly.
+- URL ingestion fetches only the submitted page. It is intentionally not a recursive site crawler.
 - Imported source text may be sent to the configured extraction model. Do not upload transcripts or student records.
 - General-education credits that are not mapped to a specific catalog course are labeled as placeholders instead of being presented as verified course recommendations.
 - Authentication and database credentials are environment-specific and are intentionally excluded from source control.

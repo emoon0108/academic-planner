@@ -71,8 +71,10 @@ const LEGACY_STATE_PATH = resolve(process.cwd(), "server/data/catalog-research-u
 const CUSTOM_STATE_PATH = process.env.ACADEMIQ_RESEARCH_STATE_PATH
   ? resolve(process.env.ACADEMIQ_RESEARCH_STATE_PATH)
   : null;
-const COURSE_PATTERN = /\b([A-Z]{2,8})\s*[- ]?(\d{3,4}[A-Z]?)\b[:\s-]*([^.;()]{3,100})?(?:\((\d+(?:\.\d+)?)\s*(?:credits?|cr)\))?/gi;
+const COURSE_PATTERN = /\b([A-Z]{2,8})\s*[- ]?(\d{3,4}[A-Z]?)\b(?:\s*[:–—-]\s*|\s+)([^.;()]{3,100})?(?:\((\d+(?:\.\d+)?)\s*(?:credits?|cr)\))?/gi;
 const REQUIREMENT_PATTERN = /\b(?:requirements?|credits?|prerequisites?|core|electives?|degree|major)\b[^.]{20,220}\./gi;
+const NON_COURSE_SUBJECTS = new Set(["BUILDING", "FACULTY", "FALL", "PHONE", "ROOM", "SPRING", "SUMMER", "WINTER"]);
+const NON_COURSE_CONTEXT = /\b(?:alumni|award-winning|building|ceo|cofounder|contact us|copyright|faculty|manager|read more|software engineer)\b/i;
 const REQUIREMENT_TYPES = new Set<ExtractedRequirementCategory["type"]>([
   "core",
   "elective",
@@ -213,12 +215,16 @@ export function extractCoursesFromSources(sources: UniversityResearchSource[]) {
 
     const matches = Array.from(source.excerpt.matchAll(COURSE_PATTERN));
     for (const match of matches) {
-      const code = `${match[1].toUpperCase()} ${match[2].toUpperCase()}`;
+      const subject = match[1].toUpperCase();
+      if (NON_COURSE_SUBJECTS.has(subject)) continue;
+      const code = `${subject} ${match[2].toUpperCase()}`;
+      const name = (match[3] ?? "Catalog course").trim();
+      if (NON_COURSE_CONTEXT.test(name)) continue;
       if (seen.has(code)) continue;
       seen.add(code);
       courses.push({
         code,
-        name: (match[3] ?? "Catalog course").trim(),
+        name,
         credits: match[4] ? Number(match[4]) : null,
         sourceUrl: source.url,
       });
@@ -501,15 +507,21 @@ export async function runCatalogResearchImport({
   sources: UniversityResearchSource[];
   scope?: string | number;
 }) {
+  const uploadedCount = sources.filter(source => source.origin === "upload").length;
+  const websiteCount = sources.length - uploadedCount;
+  const sourceSummary = [
+    websiteCount > 0 ? `${websiteCount} website${websiteCount === 1 ? "" : "s"}` : "",
+    uploadedCount > 0 ? `${uploadedCount} uploaded file${uploadedCount === 1 ? "" : "s"}` : "",
+  ].filter(Boolean).join(" and ");
   const update = await buildCatalogResearchUpdate(
     { schoolName, majorName },
     {
       status: sources.length > 0 ? "sources_found" : "no_sources_found",
       sources,
       notes: [
-        `${sources.length} uploaded source${sources.length === 1 ? " was" : "s were"} parsed locally.`,
+        `${sourceSummary || "No sources"} ${sources.length === 1 ? "was" : "were"} parsed into reviewable evidence.`,
         "When structured AI extraction is configured, source excerpts are sent to that model provider for schema extraction.",
-        "Uploaded sources are evidence candidates, not trusted catalog records, until reviewed and approved.",
+        "Sources are evidence candidates, not trusted catalog records, until reviewed and approved.",
       ],
     }
   );

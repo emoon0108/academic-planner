@@ -25,6 +25,14 @@ import {
   writeCatalogResearchState,
 } from "./ai/catalogResearchAgent";
 import { createImportedSource, MAX_IMPORTED_SOURCE_BYTES } from "./ai/sourceDocuments";
+import {
+  readSourceLibrary,
+  removeSourceFromLibrary,
+  saveFailedWebSource,
+  saveSourcesToLibrary,
+  sourceFreshness,
+} from "./ai/sourceLibrary";
+import { scrapeWebSource } from "./ai/webSources";
 import * as db from "./db";
 import { buildCourseGraph, getGraphVisualizationData, prerequisitesSatisfied, CourseNode, PrerequisiteEdge } from "./engine/graph";
 import { generateAllVariants, generatePlan, isPlaceholderCourseId, ScheduleConstraints, GeneratedPlan } from "./engine/optimizer";
@@ -732,9 +740,17 @@ export const appRouter = router({
 
   researchAgent: router({
     status: protectedProcedure.query(async ({ ctx }) => {
+      const library = await readSourceLibrary(ctx.user.id);
       return {
         watchlist: DEFAULT_RESEARCH_TARGETS,
         state: await readCatalogResearchState(ctx.user.id),
+        library: {
+          updatedAt: library.updatedAt,
+          sources: library.sources.map(source => {
+            const { excerpt: _excerpt, ...summary } = source;
+            return { ...summary, freshness: sourceFreshness(source) };
+          }),
+        },
       };
     }),
 
@@ -745,7 +761,65 @@ export const appRouter = router({
         sourceUrls: z.array(z.string().url()).max(5).optional(),
       })).min(1).max(8).optional(),
     }).optional()).mutation(async ({ ctx, input }) => {
-      return runCatalogResearchCycle(input?.targets, ctx.user.id);
+      const targets = input?.targets ?? DEFAULT_RESEARCH_TARGETS.slice(0, 3);
+      const state = await runCatalogResearchCycle(targets, ctx.user.id);
+      const updates = state.updates.slice(0, targets.length);
+      for (const update of updates) {
+        if (update.sources.length > 0) {
+          await saveSourcesToLibrary({
+            scope: ctx.user.id,
+            schoolName: update.schoolName,
+            majorName: update.majorName,
+            sources: update.sources,
+          });
+        }
+      }
+      return state;
+    }),
+
+    scrapeUrls: protectedProcedure.input(z.object({
+      schoolName: z.string().trim().min(2).max(160),
+      majorName: z.string().trim().min(2).max(160),
+      urls: z.array(z.string().url()).min(1).max(4),
+    })).mutation(async ({ ctx, input }) => {
+      const sources = [];
+      const failures: Array<{ url: string; error: string }> = [];
+      for (const url of Array.from(new Set(input.urls))) {
+        try {
+          sources.push(await scrapeWebSource(url));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "The website could not be retrieved.";
+          failures.push({ url, error: message });
+          await saveFailedWebSource({
+            scope: ctx.user.id,
+            schoolName: input.schoolName,
+            majorName: input.majorName,
+            url,
+            error: message,
+          });
+        }
+      }
+
+      if (sources.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: failures[0]?.error ?? "No websites could be retrieved.",
+        });
+      }
+
+      await saveSourcesToLibrary({
+        scope: ctx.user.id,
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources,
+      });
+      const state = await runCatalogResearchImport({
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources,
+        scope: ctx.user.id,
+      });
+      return { state, update: state.updates[0], failures };
     }),
 
     importSources: protectedProcedure.input(z.object({
@@ -771,6 +845,13 @@ export const appRouter = router({
         sources.map(source => [source.contentHash ?? source.url, source]),
       ).values());
 
+      await saveSourcesToLibrary({
+        scope: ctx.user.id,
+        schoolName: input.schoolName,
+        majorName: input.majorName,
+        sources: uniqueSources,
+      });
+
       const state = await runCatalogResearchImport({
         schoolName: input.schoolName,
         majorName: input.majorName,
@@ -782,6 +863,54 @@ export const appRouter = router({
         update: state.updates[0],
         duplicateCount: sources.length - uniqueSources.length,
       };
+    }),
+
+    refreshSource: protectedProcedure.input(z.object({
+      sourceId: z.string().min(1).max(64),
+    })).mutation(async ({ ctx, input }) => {
+      const library = await readSourceLibrary(ctx.user.id);
+      const existing = library.sources.find(source => source.id === input.sourceId);
+      if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Source not found." });
+      if (!existing.url.startsWith("http://") && !existing.url.startsWith("https://")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Uploaded files cannot be refreshed from the web." });
+      }
+
+      let refreshed;
+      try {
+        refreshed = await scrapeWebSource(existing.requestedUrl ?? existing.url);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "The website could not be refreshed.";
+        await saveFailedWebSource({
+          scope: ctx.user.id,
+          schoolName: existing.schoolName,
+          majorName: existing.majorName,
+          url: existing.requestedUrl ?? existing.url,
+          error: message,
+        });
+        throw new TRPCError({ code: "BAD_REQUEST", message });
+      }
+
+      await saveSourcesToLibrary({
+        scope: ctx.user.id,
+        schoolName: existing.schoolName,
+        majorName: existing.majorName,
+        sources: [refreshed],
+      });
+      const state = await runCatalogResearchImport({
+        schoolName: existing.schoolName,
+        majorName: existing.majorName,
+        sources: [refreshed],
+        scope: ctx.user.id,
+      });
+      return { state, update: state.updates[0] };
+    }),
+
+    removeSource: protectedProcedure.input(z.object({
+      sourceId: z.string().min(1).max(64),
+    })).mutation(async ({ ctx, input }) => {
+      const state = await removeSourceFromLibrary(ctx.user.id, input.sourceId);
+      if (!state) throw new TRPCError({ code: "NOT_FOUND", message: "Source not found." });
+      return state;
     }),
 
     approveImport: protectedProcedure.input(z.object({

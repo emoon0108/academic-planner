@@ -87,7 +87,7 @@
 ## Phase 9: Testing & Polish
 - [x] Vitest unit tests for core engine (graph builder, optimizer, replanning) — 22 tests
 - [x] Vitest auth test — 1 test
-- [x] All 49 tests passing (including source parsing and research imports)
+- [x] All 57 tests passing (including source parsing, safe web ingestion, and research imports)
 - [x] Final checkpoint and delivery
 
 ## Ivy League Expansion
@@ -103,6 +103,12 @@
 - [x] Fix Ivy League seed script to match actual DB schema and run it
 - [x] Add deleteAccount tRPC procedure (deletes all user data: profile, plans, chat messages, scenarios)
 - [x] Add resetAccount tRPC procedure (resets student profile and plans but keeps the user record)
+
+## Source Intelligence
+- [x] Add review-gated PDF, CSV, HTML, Markdown, and text imports
+- [x] Add safe single-page URL ingestion with redirect, timeout, size, and private-network protections
+- [x] Persist a per-user source library with crawl status and freshness metadata
+- [x] Add source refresh and removal controls
 - [x] Add Delete Account / Reset Account UI in the Dashboard settings area with confirmation dialogs
 
 ## AP/Transfer Credits Fix

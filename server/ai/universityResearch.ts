@@ -1,10 +1,12 @@
 import { callDataApi } from "../_core/dataApi";
 import { ENV } from "../_core/env";
+import { scrapeWebSource } from "./webSources";
 
 export type UniversityResearchSource = {
   id?: string;
   title: string;
   url: string;
+  requestedUrl?: string;
   excerpt: string;
   kind?: "web" | "pdf" | "csv" | "html" | "text";
   origin?: "discovered" | "provided_url" | "upload";
@@ -128,54 +130,12 @@ async function fetchSource(
   const cached = sourceCache.get(url);
   if (cached) return cached;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        accept: "text/html,application/xhtml+xml,application/pdf;q=0.8,text/plain;q=0.7,*/*;q=0.5",
-        "user-agent": "AcademiQ academic planning research bot",
-      },
-      signal: controller.signal,
-    });
-
-    if (!response.ok) return null;
-
-    const contentType = response.headers.get("content-type") ?? "";
-    if (contentType.includes("application/pdf")) {
-      const source = {
-        title: url,
-        url,
-        excerpt: "PDF source found. Open this official document to verify exact wording before relying on the policy.",
-        kind: "pdf" as const,
-        origin,
-        mimeType: contentType,
-        retrievedAt: new Date().toISOString(),
-      };
-      sourceCache.set(url, source);
-      return source;
-    }
-
-    const html = await response.text();
-    const text = stripHtml(html).slice(0, 1800);
-    if (!text) return null;
-
-    const source = {
-      title: titleFromHtml(html, url),
-      url,
-      excerpt: text,
-      kind: "web" as const,
-      origin,
-      mimeType: contentType || "text/html",
-      retrievedAt: new Date().toISOString(),
-    };
+    const source = { ...await scrapeWebSource(url), origin };
     sourceCache.set(url, source);
     return source;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timeout);
   }
 }
 

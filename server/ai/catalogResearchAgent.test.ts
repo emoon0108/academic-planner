@@ -46,4 +46,24 @@ describe("catalog source extraction", () => {
 
     expect(courses[0]).toMatchObject({ code: "EECS 281", credits: 4 });
   });
+
+  it("does not treat navigation labels and concatenated years as courses", () => {
+    const courses = extractCoursesFromSources([
+      {
+        title: "Program page",
+        url: "https://catalog.example.edu/cs",
+        kind: "web",
+        excerpt: "FACULTY 100award-winning faculty. FALL 2026Winter guide. BUILDING 2260Hayward Street. CS 2010 Principal Product Manager, Apple TV Read more: alumni profile. EECS 445: Machine Learning (4 credits).",
+      },
+    ]);
+
+    expect(courses).toEqual([
+      {
+        code: "EECS 445",
+        name: "Machine Learning",
+        credits: 4,
+        sourceUrl: "https://catalog.example.edu/cs",
+      },
+    ]);
+  });
 });
